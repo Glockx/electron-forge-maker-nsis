@@ -24,9 +24,9 @@
   },
   "homepage": "https://github.com/felixrieseberg/electron-forge-maker-nsis",
   "dependencies": {
-    "@electron-forge/maker-base": "^7.6.0",
+    "@electron-forge/maker-base": "^7.8.1",
     "@electron/windows-sign": "^1.2.0",
-    "app-builder-lib": "^24.13.3",
+    "app-builder-lib": "^26.0.12",
     "debug": "^4.4.0",
     "electron-updater-yaml": "^1.1.2",
     "fs-extra": "^11.2.0"
