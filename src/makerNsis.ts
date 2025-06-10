@@ -1,22 +1,22 @@
-import MakerBase, { MakerOptions } from '@electron-forge/maker-base';
-import { sign } from '@electron/windows-sign';
-import { buildForge } from 'app-builder-lib';
-import fs from 'fs-extra';
-import path from 'path';
-import debug from 'debug';
-import { getChannelYml, getAppUpdateYml } from 'electron-updater-yaml';
+import MakerBase, { MakerOptions } from "@electron-forge/maker-base";
+import { sign } from "@electron/windows-sign";
+import { buildForge } from "app-builder-lib";
+import fs from "fs-extra";
+import path from "path";
+import debug from "debug";
+import { getChannelYml, getAppUpdateYml } from "electron-updater-yaml";
 
-import { MakerNSISConfig } from './config';
+import { MakerNSISConfig } from "./config";
 
-const log = debug('electron-forge:maker:nsis');
+const log = debug("electron-forge:maker:nsis");
 
 export default class MakerNSIS extends MakerBase<MakerNSISConfig> {
-  name = 'nsis';
+  name = "nsis";
 
-  defaultPlatforms: string[] = ['win32'];
+  defaultPlatforms: string[] = ["win32"];
 
   isSupportedOnCurrentPlatform(): boolean {
-    return process.platform === 'win32';
+    return process.platform === "win32";
   }
 
   async codesign(options: MakerOptions, outPath: string) {
@@ -24,7 +24,10 @@ export default class MakerNSIS extends MakerBase<MakerNSISConfig> {
       try {
         await sign({ ...this.config.codesign, appDirectory: outPath });
       } catch (error) {
-        console.error('Failed to codesign using @electron/windows-sign. Check your config and the output for details!', error);
+        console.error(
+          "Failed to codesign using @electron/windows-sign. Check your config and the output for details!",
+          error,
+        );
         throw error;
       }
 
@@ -36,11 +39,11 @@ export default class MakerNSIS extends MakerBase<MakerNSISConfig> {
       }
 
       if (!process.env.CSC_KEY_PASSWORD && this.config.codesign.certificatePassword) {
-        log('Setting process.env.CSC_KEY_PASSWORD to the passed password');
+        log("Setting process.env.CSC_KEY_PASSWORD to the passed password");
         process.env.CSC_KEY_PASSWORD = this.config.codesign.certificatePassword;
       }
     } else {
-      log('Skipping code signing, if you need it set \'config.codesign\'');
+      log("Skipping code signing, if you need it set 'config.codesign'");
     }
   }
 
@@ -55,28 +58,28 @@ export default class MakerNSIS extends MakerBase<MakerNSISConfig> {
       name: options.appName,
       channel: this.config.updater.channel,
       updaterCacheDirName: this.config.updater.updaterCacheDirName,
-      publisherName: this.config.updater.publisherName
+      publisherName: this.config.updater.publisherName,
     });
 
     log(`Writing app-update.yml to ${outPath}`, ymlContents);
-    await fs.writeFile(path.join(outPath, 'resources', 'app-update.yml'), ymlContents, 'utf8');
+    await fs.writeFile(path.join(outPath, "resources", "app-update.yml"), ymlContents, "utf8");
   }
 
   async createChannelYml(options: MakerOptions, installerPath: string) {
     if (!this.config.updater) return;
 
-    const channel = this.config.updater.channel || 'latest';
+    const channel = this.config.updater.channel || "latest";
     const version = options.packageJSON.version;
     const channelFilePath = path.resolve(installerPath, `${channel}.yml`);
 
     const ymlContents = await getChannelYml({
       installerPath,
       version,
-      platform: 'win32'
+      platform: "win32",
     });
 
     log(`Writing ${channel}.yml to ${installerPath}`, ymlContents);
-    await fs.writeFile(channelFilePath, ymlContents, 'utf8');
+    await fs.writeFile(channelFilePath, ymlContents, "utf8");
     return channelFilePath;
   }
 
@@ -105,20 +108,24 @@ export default class MakerNSIS extends MakerBase<MakerNSISConfig> {
     const additionalConfig = this.config.getAppBuilderConfig
       ? await this.config.getAppBuilderConfig()
       : {};
-    const output = await buildForge({ dir: tmpPath }, {
-      win: [
-        `nsis:${options.targetArch}`
-      ],
-      config: {
-        directories: {
-          output: path.resolve(tmpPath, '..', 'make')
+    const nsisOptions = this.config.nsisOptions || {};
+
+    const output = await buildForge(
+      { dir: tmpPath },
+      {
+        win: [`nsis:${options.targetArch}`],
+        config: {
+          directories: {
+            output: path.resolve(tmpPath, "..", "make"),
+          },
+          ...additionalConfig,
+          ...nsisOptions,
         },
-        ...additionalConfig
-      }
-    });
+      },
+    );
 
     // Move the output to the actual output folder, app-builder-lib might get it wrong
-    log('Received output files', output);
+    log("Received output files", output);
     for (const file of output) {
       const filePath = path.resolve(outPath, path.basename(file));
 
@@ -133,7 +140,7 @@ export default class MakerNSIS extends MakerBase<MakerNSISConfig> {
 
     // Cleanup
     await fs.remove(tmpPath);
-    await fs.remove(path.resolve(makeDir, 'nsis/make'));
+    await fs.remove(path.resolve(makeDir, "nsis/make"));
 
     return result;
   }
