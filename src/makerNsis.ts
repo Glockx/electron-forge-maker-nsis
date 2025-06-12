@@ -86,6 +86,7 @@ export default class MakerNSIS extends MakerBase<MakerNSISConfig> {
   async make(options: MakerOptions): Promise<string[]> {
     // Copy everything to a temporary location
     const { makeDir, targetArch } = options;
+    console.log(`Making NSIS for ${options.appName} (${targetArch})`);
     const outPath = path.resolve(makeDir, `nsis/${targetArch}`);
     const tmpPath = path.resolve(makeDir, `nsis/${targetArch}-tmp`);
     const result: Array<string> = [];
@@ -108,7 +109,6 @@ export default class MakerNSIS extends MakerBase<MakerNSISConfig> {
     const additionalConfig = this.config.getAppBuilderConfig
       ? await this.config.getAppBuilderConfig()
       : {};
-    const nsisOptions = this.config.nsisOptions || {};
 
     const output = await buildForge(
       { dir: tmpPath },
@@ -119,7 +119,6 @@ export default class MakerNSIS extends MakerBase<MakerNSISConfig> {
             output: path.resolve(tmpPath, "..", "make"),
           },
           ...additionalConfig,
-          ...nsisOptions,
         },
       },
     );
